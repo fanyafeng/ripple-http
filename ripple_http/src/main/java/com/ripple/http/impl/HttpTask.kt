@@ -1,6 +1,7 @@
 package com.ripple.http.impl
 
 import android.os.Handler
+import android.os.Looper
 import com.alibaba.fastjson.JSON
 import com.ripple.http.base.HttpMethod
 import com.ripple.http.base.IHttpRequest
@@ -218,6 +219,7 @@ internal class HttpTask : IHttpRequest {
         /**
          * 如果延时300毫秒后两个值时相同的则认为用户是没有操作的，开始进行请求的调用
          */
+        Looper.prepare()
         Handler().postDelayed({
             val linkIndex = httpLinkList.last.index
             if (nowIndex == linkIndex) {
@@ -226,6 +228,7 @@ internal class HttpTask : IHttpRequest {
                 }
             }
         }, 300)
+        Looper.loop()
     }
 
     fun start() {
