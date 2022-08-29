@@ -219,7 +219,9 @@ internal class HttpTask : IHttpRequest {
         /**
          * 如果延时300毫秒后两个值时相同的则认为用户是没有操作的，开始进行请求的调用
          */
-        Looper.prepare()
+        if (Looper.myLooper() == null) {
+            Looper.prepare()
+        }
         Handler().postDelayed({
             val linkIndex = httpLinkList.last.index
             if (nowIndex == linkIndex) {
