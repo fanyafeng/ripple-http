@@ -543,17 +543,34 @@ internal class HttpTask : IHttpRequest {
                             JSON.parseObject(result),
                             params.response
                         )
-                        if (backResult != null) {
-                            launch(Dispatchers.Main) {
-                                /**
-                                 * 成功执行完成后
-                                 * 进度条：[0-100] 0为开始 -1失败 100成功
-                                 * 请求成功回调请求结果
-                                 * 请求完成回调完成为true
-                                 */
-                                callback.onItemDoing(OnItemDoing.CODE_ITEM_DOING_FINISH)
-                                callback.onItemSuccess(backResult)
-                                callback.onItemFinish(true)
+                        val code = params.response.code
+                        val message = params.response.message
+                        val innerClazz = params.response.itemKClass
+                        if (code == "200") {
+                            if (backResult != null) {
+                                launch(Dispatchers.Main) {
+                                    /**
+                                     * 成功执行完成后
+                                     * 进度条：[0-100] 0为开始 -1失败 100成功
+                                     * 请求成功回调请求结果
+                                     * 请求完成回调完成为true
+                                     */
+                                    callback.onItemDoing(OnItemDoing.CODE_ITEM_DOING_FINISH)
+                                    callback.onItemSuccess(backResult)
+                                    callback.onItemFinish(true)
+                                }
+                            } else {
+                                launch(Dispatchers.Main) {
+                                    /**
+                                     * 成功执行完成后 失败
+                                     * 进度条：[0-100] 0为开始 -1失败 100成功
+                                     * 请求成功回调请求结果
+                                     * 请求完成回调完成为false
+                                     */
+                                    callback.onItemDoing(OnItemDoing.CODE_ITEM_DOING_FINISH)
+                                    callback.onItemSuccess(innerClazz.newInstance() as T)
+                                    callback.onItemFinish(true)
+                                }
                             }
                         } else {
                             launch(Dispatchers.Main) {
@@ -564,11 +581,10 @@ internal class HttpTask : IHttpRequest {
                                  * 请求完成回调完成为false
                                  */
                                 callback.onItemDoing(OnItemDoing.CODE_ITEM_DOING_FAILED)
-                                callback.onItemFailed(BaseException(msg = "请求结果data为空，请查看请求是否正确，返回结果:$result"))
+                                callback.onItemFailed(BaseException(msg = message))
                                 callback.onItemFinish(false)
                             }
                         }
-
                     } else {
                         launch(Dispatchers.Main) {
                             /**
