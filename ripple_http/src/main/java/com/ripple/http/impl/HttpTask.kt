@@ -63,6 +63,8 @@ internal class HttpTask : IHttpRequest {
      */
     private var hasRequest = AtomicBoolean(false)
 
+    private var isLoopIsNull = false
+
     /**
      * 重置方法
      * 每当从get() post调用都需要进行重置
@@ -220,6 +222,7 @@ internal class HttpTask : IHttpRequest {
          * 如果延时300毫秒后两个值时相同的则认为用户是没有操作的，开始进行请求的调用
          */
         if (Looper.myLooper() == null) {
+            isLoopIsNull = true
             Looper.prepare()
         }
         Handler().postDelayed({
@@ -230,7 +233,10 @@ internal class HttpTask : IHttpRequest {
                 }
             }
         }, 300)
-        Looper.loop()
+        if (isLoopIsNull) {
+            isLoopIsNull = false
+            Looper.loop()
+        }
     }
 
     fun start() {
