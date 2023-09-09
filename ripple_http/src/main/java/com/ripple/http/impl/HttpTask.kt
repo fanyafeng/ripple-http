@@ -290,6 +290,7 @@ internal class HttpTask : IHttpRequest {
             } else {
                 parseItemParamType(headCallback)
             }
+        val realType = getRealType(head.lambda)
 
 
         /**
@@ -339,7 +340,7 @@ internal class HttpTask : IHttpRequest {
             }
 
         }
-        call(headParams, headInnerCallBack, headClazz)
+        call(headParams, headInnerCallBack, headClazz, realType)
 
         followSize.forEach { followIndex ->
             val followHttpLinkItemModel = follow[followIndex]
@@ -392,7 +393,7 @@ internal class HttpTask : IHttpRequest {
                 }
 
             }
-            call(params, innerCallBack, clazz)
+            call(params, innerCallBack, clazz, realType)
         }
     }
 
@@ -422,6 +423,31 @@ internal class HttpTask : IHttpRequest {
             clazz
         }
         return itemKClass
+    }
+
+    private fun getRealType(lambda: SuccessLambda<Any>): KType? {
+        var isListResult = false
+        var itemKClass: Class<*> = String::class.java
+
+        val paramType = if (lambda != null) {
+            val reflect = lambda.reflect()
+            var result: KType? = null
+            if (reflect != null) {
+                result = reflect.parameters[0].type
+            }
+            result
+        } else {
+            String::class.createType()
+        }
+        var clazz = (paramType?.classifier as KClass<*>).java
+        if (clazz.isArrayType()) {
+            isListResult = true
+        }
+        return if (isListResult) {
+            paramType.arguments[0].type
+        } else {
+            paramType
+        }
     }
 
     private fun parseItemParamType(paramEntity: Any?): Class<*> {
@@ -505,6 +531,7 @@ internal class HttpTask : IHttpRequest {
         params: IRequestParams.IHttpRequestParams,
         callback: OnHttpResult<T>,
         clazz: Class<*>? = null,
+        realType: KType? = null,
         successLambda: SuccessLambda<Call> = null
     ) {
         callback.onItemStart(Unit)
@@ -540,8 +567,10 @@ internal class HttpTask : IHttpRequest {
                          * 解析请求结果
                          */
                         params.response.response = result
+                        params.response.itemKType = realType
                         if (clazz != null) {
                             params.response.itemKClass = clazz
+                            params.response.isListResult = clazz.isArrayType()
                         } else {
                             params.response.parseItemParamType(callback)
                         }

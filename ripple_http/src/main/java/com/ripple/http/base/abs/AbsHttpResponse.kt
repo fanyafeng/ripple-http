@@ -12,6 +12,7 @@ import java.lang.reflect.Type
 import java.lang.reflect.WildcardType
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
+import kotlin.reflect.KType
 
 
 /**
@@ -29,6 +30,7 @@ abstract class AbsHttpResponse : IHttpResponse {
     override var code = ""
     override var success = true
     override var itemKClass: Class<*> = String::class.java
+    override var itemKType: KType? = null
 
     var hasSuccess = true
 
